@@ -21,95 +21,105 @@ SECONDS=0
 
 domain=
 subreport=
-usage() { echo -e "Usage: $0 -d domain [-e] [-o \"outputDirectory\"]\n" 1>&2; exit 1; }
+usage() {
+    echo -e "Usage: $0 -d domain [-e] [-o \"outputDirectory\"]\n" 1>&2
+    exit 1
+}
 
 while getopts ":d:e:r:o:" options; do
     case "${options}" in
-        d)
-            domain=${OPTARG}
-            ;;
-            #### working on subdomain exclusion
-        e)
-            excluded=${OPTARG}
-            ;;
-		    r)
-            subreport+=("$OPTARG")
-            ;;
-        o)
-            outputDirectory=${OPTARG}
-            ;;
-        *)
-            usage
-            ;;
+    d)
+        domain=${OPTARG}
+        ;;
+        #### working on subdomain exclusion
+    e)
+        excluded=${OPTARG}
+        ;;
+    r)
+        subreport+=("$OPTARG")
+        ;;
+    o)
+        outputDirectory=${OPTARG}
+        ;;
+    *)
+        usage
+        ;;
     esac
 done
 shift $((OPTIND - 1))
 
 if [ -z "${domain}" ] && [[ -z ${subreport[@]} ]]; then
-   usage; exit 1;
+    usage
+    exit 1
 fi
 
-discovery(){
-	hostalive "$domain"
-	cleandirsearch "$domain"
-	aqua "$domain"
-	cleanup "$domain"
-	waybackrecon "$domain"
-	dirsearcher 
+discovery() {
+    hostalive "$domain"
+    cleandirsearch "$domain"
+    aqua "$domain"
+    cleanup "$domain"
+    waybackrecon "$domain"
+    dirsearcher
 }
 
-waybackrecon () {
+waybackrecon() {
     echo "Scraping Wayback Machine for data..."
-    cat "$outputDirectory/$domain/$foldername/urllist.txt" | waybackurls > "$outputDirectory/$domain/$foldername/wayback-data/waybackurls.txt" 
-    cat "$outputDirectory/$domain/$foldername/wayback-data/waybackurls.txt"  | sort -u | unfurl --unique keys > "$outputDirectory/$domain/$foldername/wayback-data/paramlist.txt"
-    [ -s "$outputDirectory/$domain/$foldername/wayback-data/paramlist.txt" ] && echo "Wordlist saved to /$domain/$foldername/wayback-data/paramlist.txt" 
+    cat "$outputDirectory/$domain/$foldername/urllist.txt" | waybackurls >"$outputDirectory/$domain/$foldername/wayback-data/waybackurls.txt"
+    cat "$outputDirectory/$domain/$foldername/wayback-data/waybackurls.txt" | sort -u | unfurl --unique keys >"$outputDirectory/$domain/$foldername/wayback-data/paramlist.txt"
+    [ -s "$outputDirectory/$domain/$foldername/wayback-data/paramlist.txt" ] && echo "Wordlist saved to /$domain/$foldername/wayback-data/paramlist.txt"
 
-    cat "$outputDirectory/$domain/$foldername/wayback-data/waybackurls.txt"  | sort -u | grep -P "\w+\.js(\?|$)" | sort -u > "$outputDirectory/$domain/$foldername/wayback-data/jsurls.txt"
-    [ -s "$outputDirectory/$domain/$foldername/wayback-data/jsurls.txt" ] && echo "JS URLs saved to /$domain/$foldername/wayback-data/jsurls.txt" 
+    cat "$outputDirectory/$domain/$foldername/wayback-data/waybackurls.txt" | sort -u | grep -P "\w+\.js(\?|$)" | sort -u >"$outputDirectory/$domain/$foldername/wayback-data/jsurls.txt"
+    [ -s "$outputDirectory/$domain/$foldername/wayback-data/jsurls.txt" ] && echo "JS URLs saved to /$domain/$foldername/wayback-data/jsurls.txt"
 
-    cat "$outputDirectory/$domain/$foldername/wayback-data/waybackurls.txt"  | sort -u | grep -P "\w+\.php(\?|$)" | sort -u > "$outputDirectory/$domain/$foldername/wayback-data/phpurls.txt"
-    [ -s "$outputDirectory/$domain/$foldername/wayback-data/phpurls.txt" ] && echo "PHP URLs saved to /$domain/$foldername/wayback-data/phpurls.txt" 
+    cat "$outputDirectory/$domain/$foldername/wayback-data/waybackurls.txt" | sort -u | grep -P "\w+\.php(\?|$)" | sort -u >"$outputDirectory/$domain/$foldername/wayback-data/phpurls.txt"
+    [ -s "$outputDirectory/$domain/$foldername/wayback-data/phpurls.txt" ] && echo "PHP URLs saved to /$domain/$foldername/wayback-data/phpurls.txt"
 
-    cat "$outputDirectory/$domain/$foldername/wayback-data/waybackurls.txt"  | sort -u | grep -P "\w+\.aspx(\?|$)" | sort -u > "$outputDirectory/$domain/$foldername/wayback-data/aspxurls.txt"
-    [ -s "$outputDirectory/$domain/$foldername/wayback-data/aspxurls.txt" ] && echo "ASP URLs saved to /$domain/$foldername/wayback-data/aspxurls.txt" 
+    cat "$outputDirectory/$domain/$foldername/wayback-data/waybackurls.txt" | sort -u | grep -P "\w+\.aspx(\?|$)" | sort -u >"$outputDirectory/$domain/$foldername/wayback-data/aspxurls.txt"
+    [ -s "$outputDirectory/$domain/$foldername/wayback-data/aspxurls.txt" ] && echo "ASP URLs saved to /$domain/$foldername/wayback-data/aspxurls.txt"
 
-    cat "$outputDirectory/$domain/$foldername/wayback-data/waybackurls.txt"  | sort -u | grep -P "\w+\.jsp(\?|$)" | sort -u > "$outputDirectory/$domain/$foldername/wayback-data/jspurls.txt"
-    [ -s "$outputDirectory/$domain/$foldername/wayback-data/jspurls.txt" ] && echo "JSP URLs saved to /$domain/$foldername/wayback-data/jspurls.txt" 
+    cat "$outputDirectory/$domain/$foldername/wayback-data/waybackurls.txt" | sort -u | grep -P "\w+\.jsp(\?|$)" | sort -u >"$outputDirectory/$domain/$foldername/wayback-data/jspurls.txt"
+    [ -s "$outputDirectory/$domain/$foldername/wayback-data/jspurls.txt" ] && echo "JSP URLs saved to /$domain/$foldername/wayback-data/jspurls.txt"
 }
 
-cleanup(){
+cleanup() {
     cd "$outputDirectory/$domain/$foldername/screenshots/" || exit
-    rename 's/_/-/g' -- * 
+    rename 's/_/-/g' -- *
     cd "$path" || exit
 }
 
-hostalive(){
+hostalive() {
     echo "Probing for live hosts..."
-    cat "$outputDirectory/$domain/$foldername/alldomains.txt" | sort -u | httprobe -c 50 -t 3000 >> "$outputDirectory/$domain/$foldername/responsive.txt"
-    cat "$outputDirectory/$domain/$foldername/responsive.txt" | sed 's/\http\:\/\///g' |  sed 's/\https\:\/\///g' | sort -u | while read -r line; do
+    cat "$outputDirectory/$domain/$foldername/alldomains.txt" | sort -u | httprobe -c 50 -t 3000 >>"$outputDirectory/$domain/$foldername/responsive.txt"
+    cat "$outputDirectory/$domain/$foldername/responsive.txt" | sed 's/\http\:\/\///g' | sed 's/\https\:\/\///g' | sort -u | while read -r line; do
         probeurl=$(cat "$outputDirectory/$domain/$foldername/responsive.txt" | sort -u | grep -m 1 "$line")
-        echo "$probeurl" >> "$outputDirectory/$domain/$foldername/urllist.txt"
+        echo "$probeurl" >>"$outputDirectory/$domain/$foldername/urllist.txt"
     done
     cat "$outputDirectory/$domain/$foldername/urllist.txt" | sort -u | sponge "$outputDirectory/$domain/$foldername/urllist.txt"
-    echo  "${yellow}Total of $(wc -l "$outputDirectory/$domain/$foldername/urllist.txt" | awk '{print $1}') live subdomains were found${reset}"
+    echo "${yellow}Total of $(wc -l "$outputDirectory/$domain/$foldername/urllist.txt" | awk '{print $1}') live subdomains were found${reset}"
 }
 
-recon(){
+recon() {
     echo "${green}Recon started on $domain ${reset}"
+
     echo "Finding subdomains using Sublist3r..."
-    python "$HOME/tools/Sublist3r/sublist3r.py" -b -d "$domain" -t 10 -v -o "$outputDirectory/$domain/$foldername/$domain.txt" > /dev/null
+    python "$HOME/tools/Sublist3r/sublist3r.py" -b -d "$domain" -t 10 -v -o "$outputDirectory/$domain/$foldername/$domain.txt" >/dev/null
+
     echo "Finding subdomains using Amass..."
-    amass enum -active -brute -d "$domain" >> "$outputDirectory/$domain/$foldername/$domain.txt"
+    amass enum -active -brute -d "$domain" >>"$outputDirectory/$domain/$foldername/$domain.txt"
     cat "$outputDirectory/$domain/$foldername/$domain.txt" | sort -u | grep "$domain" | sponge "$outputDirectory/$domain/$foldername/$domain.txt"
+
     echo "Finding domains using Certspotter..."
-    curl -s "https://api.certspotter.com/v1/issuances?domain=$domain&include_subdomains=true&expand=dns_names" | jq '.[].dns_names[]' | sed 's/\"//g' | sed 's/\*\.//g' | sort -u | grep $domain >> "$outputDirectory/$domain/$foldername/$domain.txt"
+    curl -s "https://api.certspotter.com/v1/issuances?domain=$domain&include_subdomains=true&expand=dns_names" | jq '.[].dns_names[]' | sed 's/\"//g' | sed 's/\*\.//g' | sort -u | grep $domain >>"$outputDirectory/$domain/$foldername/$domain.txt"
+
     echo "Finding domains using (old) Project Sonar data script hosted by erbbysam.com (thx m8).."
-    curl -s "https://dns.bufferover.run/dns?q=$domain" 2> /dev/null | jq -r '.FDNS_A,.RDNS | .[]' | sed 's/\*\.//g' | cut -d ',' -f2 | grep -F ".$domain" | sort -u >> "$outputDirectory/$domain/$foldername/$domain.txt"
+    curl -s "https://dns.bufferover.run/dns?q=$domain" 2>/dev/null | jq -r '.FDNS_A,.RDNS | .[]' | sed 's/\*\.//g' | cut -d ',' -f2 | grep -F ".$domain" | sort -u >>"$outputDirectory/$domain/$foldername/$domain.txt"
+
     echo "Finding domains passively with pdlist.."
     pdlist "$domain" --strict -o "$outputDirectory/$domain/$foldername/pdlist.txt"
     cat "$outputDirectory/$domain/$foldername/$domain.txt" "$outputDirectory/$domain/$foldername/pdlist.txt" | sort -u | grep "$domain" | sponge "$outputDirectory/$domain/$foldername/$domain.txt"
+
     echo "Running DNSgen for new possible domain name combinations.."
-    dnsgen "$outputDirectory/$domain/$foldername/$domain.txt" > "$outputDirectory/$domain/$foldername/dnsgen.txt"
+    dnsgen "$outputDirectory/$domain/$foldername/$domain.txt" >"$outputDirectory/$domain/$foldername/dnsgen.txt"
     cat "$outputDirectory/$domain/$foldername/$domain.txt" "$outputDirectory/$domain/$foldername/dnsgen.txt" | sort -u | grep "$domain" | sponge "$outputDirectory/$domain/$foldername/$domain.txt"
     nsrecords "$domain"
 
@@ -118,55 +128,54 @@ recon(){
     cat "$outputDirectory/$domain/$foldername/$domain.txt" | sort -u | sponge "$outputDirectory/$domain/$foldername/$domain.txt"
 }
 
-dirsearcher(){
-    echo "Starting Dirsearch..." 
+dirsearcher() {
+    echo "Starting Dirsearch..."
     cat "$outputDirectory/$domain/$foldername/urllist.txt" | xargs -P$subdomainThreads -I % sh -c "python3 \"$HOME/tools/dirsearch/dirsearch.py\" -e \"$dirsearchExtensions\" -w \"$dirsearchWordlist\" -t \"$dirsearchThreads\" -u % | grep Target && tput sgr0 && bash ./lazyrecon.sh -r \"$outputDirectory\" -r \"$domain\" -r \"$foldername\" -r %"
 }
 
-aqua(){
+aqua() {
     echo "Starting Aquatone scan..."
     cat "$outputDirectory/$domain/$foldername/urllist.txt" | aquatone -out "$outputDirectory/$domain/$foldername/aqua_out" -threads "$aquatoneThreads" -silent -scan-timeout 900 -ports "$aquatonePorts"
 }
 
-searchcrtsh(){
-    $HOME/tools/massdns/scripts/ct.py "$domain" 2>/dev/null > "$outputDirectory/$domain/$foldername/tmp.txt"
+searchcrtsh() {
+    $HOME/tools/massdns/scripts/ct.py "$domain" 2>/dev/null >"$outputDirectory/$domain/$foldername/tmp.txt"
     [ -s "$outputDirectory/$domain/$foldername/tmp.txt" ] && cat "$outputDirectory/$domain/$foldername/tmp.txt" | $HOME/tools/massdns/bin/massdns -r "$HOME/tools/massdns/lists/resolvers.txt" -t A -q -o S -w "$outputDirectory/$domain/$foldername/crtsh.txt"
     cat "$outputDirectory/$domain/$foldername/$domain.txt" | $HOME/tools/massdns/bin/massdns -r "$HOME/tools/massdns/lists/resolvers.txt" -t A -q -o S -w "$outputDirectory/$domain/$foldername/domaintemp.txt"
 }
 
-mass(){
-    $HOME/tools/massdns/scripts/subbrute.py "$massdnsWordlist" "$domain" | $HOME/tools/massdns/bin/massdns -r "$HOME/tools/massdns/lists/resolvers.txt" -t A -q -o S | grep -v 142.54.173.92 > "$outputDirectory/$domain/$foldername/mass.txt"
+mass() {
+    $HOME/tools/massdns/scripts/subbrute.py "$massdnsWordlist" "$domain" | $HOME/tools/massdns/bin/massdns -r "$HOME/tools/massdns/lists/resolvers.txt" -t A -q -o S | grep -v 142.54.173.92 >"$outputDirectory/$domain/$foldername/mass.txt"
 }
 
-nsrecords(){
+nsrecords() {
     echo "Checking http://crt.sh..."
     searchcrtsh "$domain"
     echo "Starting MassDNS subdomain discovery, this may take a while..."
-    mass "$domain" > /dev/null
+    mass "$domain" >/dev/null
     echo "MassDNS finished..."
     echo "${green}Started DNS records check...${reset}"
 
     echo "Merging MassDNS results from Subbrute..."
-    cat "$outputDirectory/$domain/$foldername/mass.txt" >> "$outputDirectory/$domain/$foldername/temp.txt"
+    cat "$outputDirectory/$domain/$foldername/mass.txt" >>"$outputDirectory/$domain/$foldername/temp.txt"
     echo "Merging MassDNS results from $domain.txt..."
-    cat "$outputDirectory/$domain/$foldername/domaintemp.txt" >> "$outputDirectory/$domain/$foldername/temp.txt"
+    cat "$outputDirectory/$domain/$foldername/domaintemp.txt" >>"$outputDirectory/$domain/$foldername/temp.txt"
     echo "Merging MassDNS results from crt.sh..."
-    cat "$outputDirectory/$domain/$foldername/crtsh.txt" >> "$outputDirectory/$domain/$foldername/temp.txt"
+    cat "$outputDirectory/$domain/$foldername/crtsh.txt" >>"$outputDirectory/$domain/$foldername/temp.txt"
 
     echo "Checking for and removing wildcard DNS entry dupes..."
     cat "$outputDirectory/$domain/$foldername/temp.txt" | awk '{print $3}' | sort -u | while read -r line; do
         wildcard=$(cat "$outputDirectory/$domain/$foldername/temp.txt" | grep -m 1 "$line")
-        echo "$wildcard" >> "$outputDirectory/$domain/$foldername/cleantemp.txt"
+        echo "$wildcard" >>"$outputDirectory/$domain/$foldername/cleantemp.txt"
     done
 
     echo "Looking into CNAME records..."
-    cat "$outputDirectory/$domain/$foldername/cleantemp.txt" | grep CNAME >> "$outputDirectory/$domain/$foldername/cnames.txt"
+    cat "$outputDirectory/$domain/$foldername/cleantemp.txt" | grep CNAME >>"$outputDirectory/$domain/$foldername/cnames.txt"
     cat "$outputDirectory/$domain/$foldername/cnames.txt" | sort -u | while read -r line; do
         hostrec=$(echo "$line" | awk '{print $1}')
-        if [[ $(host "$hostrec" | grep NXDOMAIN) != "" ]]
-        then
+        if [[ $(host "$hostrec" | grep NXDOMAIN) != "" ]]; then
             echo "${red}Check the following domain for NS takeover:  $line ${reset}"
-            echo "$line" >> "$outputDirectory/$domain/$foldername/pos.txt"
+            echo "$line" >>"$outputDirectory/$domain/$foldername/pos.txt"
         else
             echo -ne "Working on it...\r"
         fi
@@ -174,20 +183,20 @@ nsrecords(){
     sleep 1
     # Commenting this out because it seems to get rid of all the wildcard dupe checking from earlier..?
     #cat $outputDirectory/$domain/$foldername/$domain.txt > $outputDirectory/$domain/$foldername/alldomains.txt
-    cat "$outputDirectory/$domain/$foldername/cleantemp.txt" | awk  '{print $1}' | while read -r line; do
+    cat "$outputDirectory/$domain/$foldername/cleantemp.txt" | awk '{print $1}' | while read -r line; do
         x="$line"
-        echo "${x%?}" >> "$outputDirectory/$domain/$foldername/alldomains.txt"
+        echo "${x%?}" >>"$outputDirectory/$domain/$foldername/alldomains.txt"
     done
     sleep 1
 }
 
-report(){
-    subdomain=$(echo "$subd" | sed 's/\http\:\/\///g' |  sed 's/\https\:\/\///g')
+report() {
+    subdomain=$(echo "$subd" | sed 's/\http\:\/\///g' | sed 's/\https\:\/\///g')
     echo "${yellow}	[+] Generating report for $subdomain"
- 
-    cat "$outputDirectory/$domain/$foldername/aqua_out/aquatone_session.json" | jq --arg v "$subd" -r '.pages[$v].headers[] | keys[] as $k | "\($k), \(.[$k])"' | grep -v "decreasesSecurity\|increasesSecurity" >> "$outputDirectory/$domain/$foldername/aqua_out/parsedjson/$subdomain.headers"
+
+    cat "$outputDirectory/$domain/$foldername/aqua_out/aquatone_session.json" | jq --arg v "$subd" -r '.pages[$v].headers[] | keys[] as $k | "\($k), \(.[$k])"' | grep -v "decreasesSecurity\|increasesSecurity" >>"$outputDirectory/$domain/$foldername/aqua_out/parsedjson/$subdomain.headers"
     dirsearchfile=$(ls "$HOME/tools/dirsearch/reports/$subdomain/" | grep -v old)
-	
+
     touch "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
     {
         echo '<html><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -223,7 +232,7 @@ report(){
     </p>
     </div>
     </header>"
-        echo '<div id="wrapper"><div id="container">' 
+        echo '<div id="wrapper"><div id="container">'
         echo "<h1 class=\"post-title\" itemprop=\"name headline\">Recon Report for <a href=\"http://$subdomain\">$subdomain</a></h1>"
         echo "<p class=\"blog-description\">Generated by LazyRecon on $(date) </p>"
         echo '<div class="container single-post-container">
@@ -239,65 +248,65 @@ report(){
     <th>Content-Length</th>
     <th>Url</th>
     </tr></thead><tbody>"
-    } >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+    } >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
 
     cat "$HOME/tools/dirsearch/reports/$subdomain/$dirsearchfile" | while read -r nline; do
         status_code=$(echo "$nline" | awk '{print $1}')
         size=$(echo "$nline" | awk '{print $2}')
         url=$(echo "$nline" | awk '{print $3}')
         path=${url#*[0-9]/}
-        echo "<tr>" >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+        echo "<tr>" >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
         if [[ "$status_code" == *20[012345678]* ]]; then
-            echo "<td class='status jackpot'>$status_code</td><td class='status jackpot'>$size</td><td><a class='status jackpot' href='$url'>/$path</a></td>" >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+            echo "<td class='status jackpot'>$status_code</td><td class='status jackpot'>$size</td><td><a class='status jackpot' href='$url'>/$path</a></td>" >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
         elif [[ "$status_code" == *30[012345678]* ]]; then
-            echo "<td class='status redirect'>$status_code</td><td class='status redirect'>$size</td><td><a class='status redirect' href='$url'>/$path</a></td>" >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+            echo "<td class='status redirect'>$status_code</td><td class='status redirect'>$size</td><td><a class='status redirect' href='$url'>/$path</a></td>" >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
         elif [[ "$status_code" == *40[012345678]* ]]; then
-            echo "<td class='status fourhundred'>$status_code</td><td class='status fourhundred'>$size</td><td><a class='status fourhundred' href='$url'>/$path</a></td>" >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+            echo "<td class='status fourhundred'>$status_code</td><td class='status fourhundred'>$size</td><td><a class='status fourhundred' href='$url'>/$path</a></td>" >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
         elif [[ "$status_code" == *50[012345678]* ]]; then
-            echo "<td class='status fivehundred'>$status_code</td><td class='status fivehundred'>$size</td><td><a class='status fivehundred' href='$url'>/$path</a></td>" >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+            echo "<td class='status fivehundred'>$status_code</td><td class='status fivehundred'>$size</td><td><a class='status fivehundred' href='$url'>/$path</a></td>" >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
         else
-            echo "<td class='status weird'>$status_code</td><td class='status weird'>$size</td><td><a class='status weird' href='$url'>/$path</a></td>" >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+            echo "<td class='status weird'>$status_code</td><td class='status weird'>$size</td><td><a class='status weird' href='$url'>/$path</a></td>" >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
         fi
-        echo "</tr>">> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+        echo "</tr>" >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
     done
 
-    echo "</tbody></table></div>" >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+    echo "</tbody></table></div>" >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
 
     echo '</article><article class="post-container-right" itemscope="" itemtype="http://schema.org/BlogPosting">
 <header class="post-header">
 </header>
 <div class="post-content clearfix" itemprop="articleBody">
 <h2>Screenshots</h2>
-<pre style="max-height: 340px;overflow-y: scroll">' >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+<pre style="max-height: 340px;overflow-y: scroll">' >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
     echo '<div class="row">
 <div class="column">
-Port 80' >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+Port 80' >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
     scpath=$(echo "$subdomain" | sed 's/\./_/g')
-    httpsc=$(ls "$outputDirectory/$domain/$foldername/aqua_out/screenshots/http__$scpath*"  2>/dev/null)
-    echo "<a href=\"../../../../$httpsc\"><img/src=\"../../../../$httpsc\"></a> " >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+    httpsc=$(ls "$outputDirectory/$domain/$foldername/aqua_out/screenshots/http__$scpath*" 2>/dev/null)
+    echo "<a href=\"../../../../$httpsc\"><img/src=\"../../../../$httpsc\"></a> " >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
     echo '</div>
   <div class="column">
-Port 443' >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
-    httpssc=$(ls "$outputDirectory/$domain/$foldername/aqua_out/screenshots/https__$scpath*"  2>/dev/null)
-    echo "<a href=\"../../../../$httpssc\"><img/src=\"../../../../$httpssc\"></a>" >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
-    echo "</div></div></pre>" >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+Port 443' >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+    httpssc=$(ls "$outputDirectory/$domain/$foldername/aqua_out/screenshots/https__$scpath*" 2>/dev/null)
+    echo "<a href=\"../../../../$httpssc\"><img/src=\"../../../../$httpssc\"></a>" >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+    echo "</div></div></pre>" >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
     #echo "<h2>Dig Info</h2><pre>$(dig $subdomain)</pre>" >> $outputDirectory/$domain/$foldername/reports/$subdomain.html
-    echo "<h2>Host Info</h2><pre>$(host "$subdomain")</pre>" >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
-    echo "<h2>Response Headers</h2><pre>" >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+    echo "<h2>Host Info</h2><pre>$(host "$subdomain")</pre>" >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+    echo "<h2>Response Headers</h2><pre>" >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
 
-    cat "$outputDirectory/$domain/$foldername/aqua_out/parsedjson/$subdomain.headers" | while read -r ln;do
+    cat "$outputDirectory/$domain/$foldername/aqua_out/parsedjson/$subdomain.headers" | while read -r ln; do
         check=$(echo "$ln" | awk '{print $1}')
-        [ "$check" = "name," ] && echo -n "$ln : " | sed 's/name, //g' >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
-        [ "$check" = "value," ] && echo " $ln" | sed 's/value, //g' >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+        [ "$check" = "name," ] && echo -n "$ln : " | sed 's/name, //g' >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+        [ "$check" = "value," ] && echo " $ln" | sed 's/value, //g' >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
     done
 
-    echo "</pre>" >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+    echo "</pre>" >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
     echo "<h2>Nmap Results</h2>
 <pre>
 $(nmap -A -T3 -Pn -p$nmapPorts $subdomain -oA $outputDirectory/$domain/$foldername/nmap_results/$subdomain)
 </pre>
 </div></article></div>
-</div></div></body></html>" >> "$outputDirectory/$domain/$foldername/reports/$subdomain.html"
+</div></div></body></html>" >>"$outputDirectory/$domain/$foldername/reports/$subdomain.html"
 
 }
 
@@ -305,18 +314,18 @@ master_report() {
     #this code will generate the html report for target it will have an overview of the scan
     echo '<html>
 <head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">' >> "$outputDirectory/$domain/$foldername/master_report.html"
+<meta http-equiv="X-UA-Compatible" content="IE=edge">' >>"$outputDirectory/$domain/$foldername/master_report.html"
     echo "<title>Recon Report for $domain</title>
 <style>.status.redirect{color:#d0b200}.status.fivehundred{color:#DD4A68}.status.jackpot{color:#0dee00}img{padding:5px;width:360px}img:hover{box-shadow:0 0 2px 1px rgba(0,140,186,.5)}pre{font-family:Inconsolata,monospace}pre{margin:0 0 20px}pre{overflow-x:auto}article,header,img{display:block}#wrapper:after,.blog-description:after,.clearfix:after{content:}.container{position:relative}html{line-height:1.15;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}h1{margin:.67em 0}h1,h2{margin-bottom:20px}a{background-color:transparent;-webkit-text-decoration-skip:objects;text-decoration:none}.container,table{width:100%}.site-header{overflow:auto}.post-header,.post-title,.site-header,.site-title,h1,h2{text-transform:uppercase}p{line-height:1.5em}pre,table td{padding:10px}h2{padding-top:40px;font-weight:900}a{color:#00a0fc}body,html{height:100%}body{margin:0;background:#fefefe;color:#424242;font-family:Raleway,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,'Helvetica Neue',Arial,sans-serif;font-size:24px}h1{font-size:35px}h2{font-size:28px}p{margin:0 0 30px}pre{background:#f1f0ea;border:1px solid #dddbcc;border-radius:3px;font-size:16px}.row{display:flex}.column{flex:100%}table tbody>tr:nth-child(odd)>td,table tbody>tr:nth-child(odd)>th{background-color:#f7f7f3}table th{padding:0 10px 10px;text-align:left}.post-header,.post-title,.site-header{text-align:center}table tr{border-bottom:1px dotted #aeadad}::selection{background:#fff5b8;color:#000;display:block}::-moz-selection{background:#fff5b8;color:#000;display:block}.clearfix:after{display:table;clear:both}.container{max-width:100%}#wrapper{height:auto;min-height:100%;margin-bottom:-265px}#wrapper:after{display:block;height:265px}.site-header{padding:40px 0 0}.site-title{float:left;font-size:14px;font-weight:600;margin:0}.site-title a{float:left;background:#00a0fc;color:#fefefe;padding:5px 10px 6px}.post-container-left{width:49%;float:left;margin:auto}.post-container-right{width:49%;float:right;margin:auto}.post-header{border-bottom:1px solid #333;margin:0 0 50px;padding:0}.post-title{font-size:55px;font-weight:900;margin:15px 0}.blog-description{color:#aeadad;font-size:14px;font-weight:600;line-height:1;margin:25px 0 0;text-align:center}.single-post-container{margin-top:50px;padding-left:15px;padding-right:15px;box-sizing:border-box}body.dark{background-color:#1e2227;color:#fff}body.dark pre{background:#282c34}body.dark table tbody>tr:nth-child(odd)>td,body.dark table tbody>tr:nth-child(odd)>th{background:#282c34}input{font-family:Inconsolata,monospace} body.dark .status.redirect{color:#ecdb54} body.dark input{border:1px solid ;border-radius: 3px; background:#282c34;color: white} body.dark label{color:#f1f0ea} body.dark pre{color:#fff}</style>
 <script>
 document.addEventListener('DOMContentLoaded', (event) => {
   ((localStorage.getItem('mode') || 'dark') === 'dark') ? document.querySelector('body').classList.add('dark') : document.querySelector('body').classList.remove('dark')
 })
-</script>" >> "$outputDirectory/$domain/$foldername/master_report.html"
+</script>" >>"$outputDirectory/$domain/$foldername/master_report.html"
     echo '<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.1.0/material.min.css">
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/dataTables.material.min.css">
   <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.js"></script>
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script><script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/dataTables.material.min.js"></script>'>> $outputDirectory/$domain/$foldername/master_report.html
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script><script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/dataTables.material.min.js"></script>' >>$outputDirectory/$domain/$foldername/master_report.html
     echo '<script>$(document).ready( function () {
     $("#myTable").DataTable({
         "paging":   true,
@@ -324,18 +333,18 @@ document.addEventListener('DOMContentLoaded', (event) => {
         "info":     false,
 	"lengthMenu": [[10, 25, 50,100, -1], [10, 25, 50,100, "All"]],
     });
-} );</script></head>'>> "$outputDirectory/$domain/$foldername/master_report.html"
+} );</script></head>' >>"$outputDirectory/$domain/$foldername/master_report.html"
 
     echo '<body class="dark"><header class="site-header">
-<div class="site-title"><p>' >> "$outputDirectory/$domain/$foldername/master_report.html"
+<div class="site-title"><p>' >>"$outputDirectory/$domain/$foldername/master_report.html"
     echo "<a style=\"cursor: pointer\" onclick=\"localStorage.setItem('mode', (localStorage.getItem('mode') || 'dark') === 'dark' ? 'bright' : 'dark'); localStorage.getItem('mode') === 'dark' ? document.querySelector('body').classList.add('dark') : document.querySelector('body').classList.remove('dark')\" title=\"Switch to light or dark theme\">🌓 Light|dark mode</a>
 </p>
 </div>
-</header>" >> "$outputDirectory/$domain/$foldername/master_report.html"
+</header>" >>"$outputDirectory/$domain/$foldername/master_report.html"
 
-    echo '<div id="wrapper"><div id="container">' >> "$outputDirectory/$domain/$foldername/master_report.html"
-    echo "<h1 class=\"post-title\" itemprop=\"name headline\">Recon Report for <a href=\"http://$domain\">$domain</a></h1>" >> "$outputDirectory/$domain/$foldername/master_report.html"
-    echo "<p class=\"blog-description\">Generated by LazyRecon on $(date) </p>" >> "$outputDirectory/$domain/$foldername/master_report.html"
+    echo '<div id="wrapper"><div id="container">' >>"$outputDirectory/$domain/$foldername/master_report.html"
+    echo "<h1 class=\"post-title\" itemprop=\"name headline\">Recon Report for <a href=\"http://$domain\">$domain</a></h1>" >>"$outputDirectory/$domain/$foldername/master_report.html"
+    echo "<p class=\"blog-description\">Generated by LazyRecon on $(date) </p>" >>"$outputDirectory/$domain/$foldername/master_report.html"
     echo '<div class="container single-post-container">
 <article class="post-container-left" itemscope="" itemtype="http://schema.org/BlogPosting">
 <header class="post-header">
@@ -349,50 +358,50 @@ document.addEventListener('DOMContentLoaded', (event) => {
  <th>Scanned Urls</th>
  </tr>
  </thead>
-<tbody>' >> "$outputDirectory/$domain/$foldername/master_report.html"
+<tbody>' >>"$outputDirectory/$domain/$foldername/master_report.html"
 
-    cat "$outputDirectory/$domain/$foldername/urllist.txt" |  sed 's/\http\:\/\///g' |  sed 's/\https\:\/\///g'  | while read -r nline; do
+    cat "$outputDirectory/$domain/$foldername/urllist.txt" | sed 's/\http\:\/\///g' | sed 's/\https\:\/\///g' | while read -r nline; do
         diresults=$(ls "$HOME/tools/dirsearch/reports/$nline/" | grep -v old)
         echo "<tr>
     <td><a href='./reports/$nline.html'>$nline</a></td>
     <td>$(wc -l $HOME/tools/dirsearch/reports/$nline/$diresults | awk '{print $1}')</td>
-    </tr>" >> "$outputDirectory/$domain/$foldername/master_report.html"
+    </tr>" >>"$outputDirectory/$domain/$foldername/master_report.html"
     done
 
     echo "</tbody></table>
 <div><h2>Possible NS Takeovers</h2></div>
-<pre>" >> "$outputDirectory/$domain/$foldername/master_report.html"
-    cat "$outputDirectory/$domain/$foldername/pos.txt" >> "$outputDirectory/$domain/$foldername/master_report.html"
+<pre>" >>"$outputDirectory/$domain/$foldername/master_report.html"
+    cat "$outputDirectory/$domain/$foldername/pos.txt" >>"$outputDirectory/$domain/$foldername/master_report.html"
 
-    echo "</pre><div><h2>Wayback data</h2></div>" >> "$outputDirectory/$domain/$foldername/master_report.html"
-    echo "<table><tbody>" >> "$outputDirectory/$domain/$foldername/master_report.html"
-    [ -s "$outputDirectory/$domain/$foldername/wayback-data/paramlist.txt" ] && echo "<tr><td><a href='./wayback-data/paramlist.txt'>Params wordlist</a></td></tr>" >> "$outputDirectory/$domain/$foldername/master_report.html"
-    [ -s "$outputDirectory/$domain/$foldername/wayback-data/jsurls.txt" ] && echo "<tr><td><a href='./wayback-data/jsurls.txt'>Javscript files</a></td></tr>" >> "$outputDirectory/$domain/$foldername/master_report.html"
-    [ -s "$outputDirectory/$domain/$foldername/wayback-data/phpurls.txt" ] && echo "<tr><td><a href='./wayback-data/phpurls.txt'>PHP Urls</a></td></tr>" >> "$outputDirectory/$domain/$foldername/master_report.html"
-    [ -s "$outputDirectory/$domain/$foldername/wayback-data/aspxurls.txt" ] && echo "<tr><td><a href='./wayback-data/aspxurls.txt'>ASP Urls</a></td></tr>" >> "$outputDirectory/$domain/$foldername/master_report.html"
-    echo "</tbody></table></div>" >> "$outputDirectory/$domain/$foldername/master_report.html"
+    echo "</pre><div><h2>Wayback data</h2></div>" >>"$outputDirectory/$domain/$foldername/master_report.html"
+    echo "<table><tbody>" >>"$outputDirectory/$domain/$foldername/master_report.html"
+    [ -s "$outputDirectory/$domain/$foldername/wayback-data/paramlist.txt" ] && echo "<tr><td><a href='./wayback-data/paramlist.txt'>Params wordlist</a></td></tr>" >>"$outputDirectory/$domain/$foldername/master_report.html"
+    [ -s "$outputDirectory/$domain/$foldername/wayback-data/jsurls.txt" ] && echo "<tr><td><a href='./wayback-data/jsurls.txt'>Javscript files</a></td></tr>" >>"$outputDirectory/$domain/$foldername/master_report.html"
+    [ -s "$outputDirectory/$domain/$foldername/wayback-data/phpurls.txt" ] && echo "<tr><td><a href='./wayback-data/phpurls.txt'>PHP Urls</a></td></tr>" >>"$outputDirectory/$domain/$foldername/master_report.html"
+    [ -s "$outputDirectory/$domain/$foldername/wayback-data/aspxurls.txt" ] && echo "<tr><td><a href='./wayback-data/aspxurls.txt'>ASP Urls</a></td></tr>" >>"$outputDirectory/$domain/$foldername/master_report.html"
+    echo "</tbody></table></div>" >>"$outputDirectory/$domain/$foldername/master_report.html"
 
     echo '</article><article class="post-container-right" itemscope="" itemtype="http://schema.org/BlogPosting">
 <header class="post-header">
 </header>
-<div class="post-content clearfix" itemprop="articleBody">' >> "$outputDirectory/$domain/$foldername/master_report.html"
-    echo "<h2><a href='./aqua_out/aquatone_report.html'>View Aquatone Report</a></h2>" >> "$outputDirectory/$domain/$foldername/master_report.html"
+<div class="post-content clearfix" itemprop="articleBody">' >>"$outputDirectory/$domain/$foldername/master_report.html"
+    echo "<h2><a href='./aqua_out/aquatone_report.html'>View Aquatone Report</a></h2>" >>"$outputDirectory/$domain/$foldername/master_report.html"
     #cat $outputDirectory/$domain/$foldername/ipaddress.txt >> $outputDirectory/$domain/$foldername/master_report.html
     echo "<h2>Dig Info</h2>
 <pre>
 $(dig $domain)
-</pre>" >> "$outputDirectory/$domain/$foldername/master_report.html"
+</pre>" >>"$outputDirectory/$domain/$foldername/master_report.html"
     echo "<h2>Host Info</h2>
 <pre>
 $(host $domain)
-</pre>" >> "$outputDirectory/$domain/$foldername/master_report.html"
+</pre>" >>"$outputDirectory/$domain/$foldername/master_report.html"
 
     echo "<h2>Nmap Results</h2>
 <pre>
 $(nmap -A -T3 -Pn -p$nmapPorts $domain -oA $outputDirectory/$domain/$foldername/nmap_results/$domain)
 </pre>
 </div></article></div>
-</div></div></body></html>" >> "$outputDirectory/$domain/$foldername/master_report.html"
+</div></div></body></html>" >>"$outputDirectory/$domain/$foldername/master_report.html"
 }
 
 logo() {
@@ -406,28 +415,29 @@ logo() {
 ${reset}                                                      "
 }
 
-cleandirsearch(){
-    cat "$outputDirectory/$domain/$foldername/urllist.txt" | sed 's/\http\:\/\///g' |  sed 's/\https\:\/\///g' | sort -u | while read -r line; do
+cleandirsearch() {
+    cat "$outputDirectory/$domain/$foldername/urllist.txt" | sed 's/\http\:\/\///g' | sed 's/\https\:\/\///g' | sort -u | while read -r line; do
         [ -d "$HOME/tools/dirsearch/reports/$line/" ] && ls "$HOME/tools/dirsearch/reports/$line/" | grep -v old | while read -r i; do
             mv "$HOME/tools/dirsearch/reports/$line/$i" "$HOME/tools/dirsearch/reports/$line/$i.old"
         done
     done
 }
 
-cleantemp(){
+cleantemp() {
     rm "$outputDirectory/$domain/$foldername/temp.txt"
     rm "$outputDirectory/$domain/$foldername/tmp.txt"
     rm "$outputDirectory/$domain/$foldername/domaintemp.txt"
     rm "$outputDirectory/$domain/$foldername/cleantemp.txt"
 }
 
-main(){
+main() {
     if [ -z "${domain}" ]; then
         outputDirectory=${subreport[1]}
         domain=${subreport[2]}
         foldername=${subreport[3]}
         subd=${subreport[4]}
-        report "$outputDirectory" "$domain" "$subdomain" "$foldername" "$subd"; exit 1;
+        report "$outputDirectory" "$domain" "$subdomain" "$foldername" "$subd"
+        exit 1
     fi
     clear
     logo
@@ -456,13 +466,13 @@ main(){
     touch "$outputDirectory/$domain/$foldername/cleantemp.txt"
     touch "$outputDirectory/$domain/$foldername/master_report.html"
 
-    cleantemp 
+    cleantemp
     recon "$domain"
     master_report "$domain"
     echo "${green}Scan for $domain finished successfully${reset}"
     duration=$SECONDS
     echo "Scan completed in : $(($duration / 60)) minutes and $(($duration % 60)) seconds."
-    cleantemp 
+    cleantemp
     stty sane
     tput sgr0
 }
@@ -471,4 +481,3 @@ todate=$(date +"%Y-%m-%d")
 path=$(pwd)
 foldername=recon-$todate
 main "$domain"
-
