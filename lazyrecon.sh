@@ -12,10 +12,10 @@ nmapPorts="1,100,1000,10000,10001,10002,10003,10004,10009,1001,10010,10012,1002,
 outputDirectory="./lazyrecon_results"
 ########################################
 
-red=`tput setaf 1`
-green=`tput setaf 2`
-yellow=`tput setaf 3`
-reset=`tput sgr0`
+red=$(tput setaf 1)
+green=$(tput setaf 2)
+yellow=$(tput setaf 3)
+reset=$(tput sgr0)
 
 SECONDS=0
 
