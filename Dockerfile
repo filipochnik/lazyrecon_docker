@@ -65,8 +65,6 @@ RUN set -x \
     && pip3 install dnsgen
 WORKDIR $TOOLS/lazyrecon
 COPY lazyrecon.sh lazyrecon.sh
-RUN set -x \
-    && wget https://raw.githubusercontent.com/soaringswine/lazyrecon_docker/master/lazyrecon.sh
 WORKDIR $TOOLS/Sublist3r
 RUN set -x \
     && pip install -r requirements.txt
