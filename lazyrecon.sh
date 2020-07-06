@@ -86,7 +86,7 @@ cleanup(){
 hostalive(){
     echo "Probing for live hosts..."
     cat $outputDirectory/$domain/$foldername/alldomains.txt | sort -u | httprobe -c 50 -t 3000 >> $outputDirectory/$domain/$foldername/responsive.txt
-    cat $outputDirectory/$domain/$foldername/responsive.txt | sed 's/\http\:\/\///g' |  sed 's/\https\:\/\///g' | sort -u | while read line; do
+    cat $outputDirectory/$domain/$foldername/responsive.txt | sed 's/\http\:\/\///g' |  sed 's/\https\:\/\///g' | sort -u | while read -r line; do
     probeurl=$(cat $outputDirectory/$domain/$foldername/responsive.txt | sort -u | grep -m 1 $line)
     echo "$probeurl" >> $outputDirectory/$domain/$foldername/urllist.txt
     done
@@ -154,14 +154,14 @@ nsrecords(){
     cat $outputDirectory/$domain/$foldername/crtsh.txt >> $outputDirectory/$domain/$foldername/temp.txt
 
     echo "Checking for and removing wildcard DNS entry dupes..."
-    cat $outputDirectory/$domain/$foldername/temp.txt | awk '{print $3}' | sort -u | while read line; do
+    cat $outputDirectory/$domain/$foldername/temp.txt | awk '{print $3}' | sort -u | while read -r line; do
     wildcard=$(cat $outputDirectory/$domain/$foldername/temp.txt | grep -m 1 $line)
     echo "$wildcard" >> $outputDirectory/$domain/$foldername/cleantemp.txt
     done
 
     echo "Looking into CNAME records..."
     cat $outputDirectory/$domain/$foldername/cleantemp.txt | grep CNAME >> $outputDirectory/$domain/$foldername/cnames.txt
-    cat $outputDirectory/$domain/$foldername/cnames.txt | sort -u | while read line; do
+    cat $outputDirectory/$domain/$foldername/cnames.txt | sort -u | while read -r line; do
     hostrec=$(echo "$line" | awk '{print $1}')
     if [[ $(host $hostrec | grep NXDOMAIN) != "" ]]
     then
@@ -174,7 +174,7 @@ nsrecords(){
     sleep 1
     # Commenting this out because it seems to get rid of all the wildcard dupe checking from earlier..?
     #cat $outputDirectory/$domain/$foldername/$domain.txt > $outputDirectory/$domain/$foldername/alldomains.txt
-    cat $outputDirectory/$domain/$foldername/cleantemp.txt | awk  '{print $1}' | while read line; do
+    cat $outputDirectory/$domain/$foldername/cleantemp.txt | awk  '{print $1}' | while read -r line; do
     x="$line"
     echo "${x%?}" >> $outputDirectory/$domain/$foldername/alldomains.txt
     done
@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
  <th>Url</th>
  </tr></thead><tbody>" >> $outputDirectory/$domain/$foldername/reports/$subdomain.html
 
-    cat $HOME/tools/dirsearch/reports/$subdomain/$dirsearchfile | while read nline; do
+    cat $HOME/tools/dirsearch/reports/$subdomain/$dirsearchfile | while read -r nline; do
     status_code=$(echo "$nline" | awk '{print $1}')
     size=$(echo "$nline" | awk '{print $2}')
     url=$(echo "$nline" | awk '{print $3}')
@@ -283,7 +283,7 @@ Port 443' >> $outputDirectory/$domain/$foldername/reports/$subdomain.html
     echo "<h2>Host Info</h2><pre>$(host $subdomain)</pre>" >> $outputDirectory/$domain/$foldername/reports/$subdomain.html
     echo "<h2>Response Headers</h2><pre>" >> $outputDirectory/$domain/$foldername/reports/$subdomain.html
 
-    cat $outputDirectory/$domain/$foldername/aqua_out/parsedjson/$subdomain.headers | while read ln;do
+    cat $outputDirectory/$domain/$foldername/aqua_out/parsedjson/$subdomain.headers | while read -r ln;do
     check=$(echo "$ln" | awk '{print $1}')
 
     [ "$check" = "name," ] && echo -n "$ln : " | sed 's/name, //g' >> $outputDirectory/$domain/$foldername/reports/$subdomain.html
@@ -351,7 +351,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
  </thead>
 <tbody>' >> $outputDirectory/$domain/$foldername/master_report.html
 
-    cat $outputDirectory/$domain/$foldername/urllist.txt |  sed 's/\http\:\/\///g' |  sed 's/\https\:\/\///g'  | while read nline; do
+    cat $outputDirectory/$domain/$foldername/urllist.txt |  sed 's/\http\:\/\///g' |  sed 's/\https\:\/\///g'  | while read -r nline; do
     diresults=$(ls $HOME/tools/dirsearch/reports/$nline/ | grep -v old)
     echo "<tr>
  <td><a href='./reports/$nline.html'>$nline</a></td>
@@ -406,8 +406,8 @@ ${reset}                                                      "
 }
 
 cleandirsearch(){
-    cat $outputDirectory/$domain/$foldername/urllist.txt | sed 's/\http\:\/\///g' |  sed 's/\https\:\/\///g' | sort -u | while read line; do
-    [ -d $HOME/tools/dirsearch/reports/$line/ ] && ls $HOME/tools/dirsearch/reports/$line/ | grep -v old | while read i; do
+    cat $outputDirectory/$domain/$foldername/urllist.txt | sed 's/\http\:\/\///g' |  sed 's/\https\:\/\///g' | sort -u | while read -r line; do
+    [ -d $HOME/tools/dirsearch/reports/$line/ ] && ls $HOME/tools/dirsearch/reports/$line/ | grep -v old | while read -r i; do
     mv $HOME/tools/dirsearch/reports/$line/$i $HOME/tools/dirsearch/reports/$line/$i.old
     done
     done
