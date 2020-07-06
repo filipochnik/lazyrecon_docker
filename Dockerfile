@@ -64,6 +64,7 @@ RUN set -x \
     && git clone https://github.com/gnebbia/pdlist \
     && pip3 install dnsgen
 WORKDIR $TOOLS/lazyrecon
+COPY lazyrecon.sh lazyrecon.sh
 RUN set -x \
     && wget https://raw.githubusercontent.com/soaringswine/lazyrecon_docker/master/lazyrecon.sh
 WORKDIR $TOOLS/Sublist3r
