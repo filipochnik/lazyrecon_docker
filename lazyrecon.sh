@@ -78,9 +78,9 @@ waybackrecon () {
 }
 
 cleanup(){
-    cd $outputDirectory/$domain/$foldername/screenshots/
+    cd "$outputDirectory/$domain/$foldername/screenshots/" || exit
     rename 's/_/-/g' -- * 
-    cd $path
+    cd "$path" || exit
 }
 
 hostalive(){
