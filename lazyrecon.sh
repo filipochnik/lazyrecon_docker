@@ -21,7 +21,7 @@ SECONDS=0
 
 domain=
 subreport=
-usage() { echo -e 'Usage: $0 -d domain [-e] [-o "outputDirectory"]\n' 1>&2; exit 1; }
+usage() { echo -e "Usage: $0 -d domain [-e] [-o \"outputDirectory\"]\n" 1>&2; exit 1; }
 
 while getopts ":d:e:r:o:" options; do
     case "${options}" in
