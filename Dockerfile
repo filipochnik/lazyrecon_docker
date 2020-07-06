@@ -47,6 +47,7 @@ RUN set -x \
         chromium-browser \
         locales \
         dnsutils \
+        moreutils \
     && apt-get clean autoclean \
 	&& apt-get autoremove -y \
 	&& rm -rf /var/lib/{apt,dpkg,cache,log}/ \

@@ -90,7 +90,7 @@ hostalive(){
         probeurl=$(cat "$outputDirectory/$domain/$foldername/responsive.txt" | sort -u | grep -m 1 "$line")
         echo "$probeurl" >> "$outputDirectory/$domain/$foldername/urllist.txt"
     done
-    echo "$(cat "$outputDirectory/$domain/$foldername/urllist.txt" | sort -u)" > "$outputDirectory/$domain/$foldername/urllist.txt"
+    cat "$outputDirectory/$domain/$foldername/urllist.txt" | sort -u | sponge "$outputDirectory/$domain/$foldername/urllist.txt"
     echo  "${yellow}Total of $(wc -l "$outputDirectory/$domain/$foldername/urllist.txt" | awk '{print $1}') live subdomains were found${reset}"
 }
 
@@ -100,22 +100,22 @@ recon(){
     python "$HOME/tools/Sublist3r/sublist3r.py" -b -d "$domain" -t 10 -v -o "$outputDirectory/$domain/$foldername/$domain.txt" > /dev/null
     echo "Finding subdomains using Amass..."
     amass enum -active -brute -d "$domain" >> "$outputDirectory/$domain/$foldername/$domain.txt"
-    echo "$(cat $outputDirectory/$domain/$foldername/$domain.txt | sort -u | grep $domain)" > "$outputDirectory/$domain/$foldername/$domain.txt"
+    cat "$outputDirectory/$domain/$foldername/$domain.txt" | sort -u | grep "$domain" | sponge "$outputDirectory/$domain/$foldername/$domain.txt"
     echo "Finding domains using Certspotter..."
     curl -s "https://api.certspotter.com/v1/issuances?domain=$domain&include_subdomains=true&expand=dns_names" | jq '.[].dns_names[]' | sed 's/\"//g' | sed 's/\*\.//g' | sort -u | grep $domain >> "$outputDirectory/$domain/$foldername/$domain.txt"
     echo "Finding domains using (old) Project Sonar data script hosted by erbbysam.com (thx m8).."
     curl -s "https://dns.bufferover.run/dns?q=$domain" 2> /dev/null | jq -r '.FDNS_A,.RDNS | .[]' | sed 's/\*\.//g' | cut -d ',' -f2 | grep -F ".$domain" | sort -u >> "$outputDirectory/$domain/$foldername/$domain.txt"
     echo "Finding domains passively with pdlist.."
     pdlist "$domain" --strict -o "$outputDirectory/$domain/$foldername/pdlist.txt"
-    echo "$(cat $outputDirectory/$domain/$foldername/$domain.txt $outputDirectory/$domain/$foldername/pdlist.txt | sort -u | grep $domain)" > "$outputDirectory/$domain/$foldername/$domain.txt"
+    cat "$outputDirectory/$domain/$foldername/$domain.txt" "$outputDirectory/$domain/$foldername/pdlist.txt" | sort -u | grep "$domain" | sponge "$outputDirectory/$domain/$foldername/$domain.txt"
     echo "Running DNSgen for new possible domain name combinations.."
     dnsgen "$outputDirectory/$domain/$foldername/$domain.txt" > "$outputDirectory/$domain/$foldername/dnsgen.txt"
-    echo "$(cat $outputDirectory/$domain/$foldername/$domain.txt $outputDirectory/$domain/$foldername/dnsgen.txt | sort -u | grep $domain)" > "$outputDirectory/$domain/$foldername/$domain.txt"
+    cat "$outputDirectory/$domain/$foldername/$domain.txt" "$outputDirectory/$domain/$foldername/dnsgen.txt" | sort -u | grep "$domain" | sponge "$outputDirectory/$domain/$foldername/$domain.txt"
     nsrecords "$domain"
 
     echo "Starting discovery of found subdomains..."
     discovery "$domain"
-    echo "$(cat $outputDirectory/$domain/$foldername/$domain.txt | sort -u)" > "$outputDirectory/$domain/$foldername/$domain.txt"
+    cat "$outputDirectory/$domain/$foldername/$domain.txt" | sort -u | sponge "$outputDirectory/$domain/$foldername/$domain.txt"
 }
 
 dirsearcher(){
