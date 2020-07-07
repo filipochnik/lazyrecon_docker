@@ -193,7 +193,6 @@ report() {
     cat "$outputFolder/aqua_out/aquatone_session.json" | jq --arg v "$subd" -r '.pages[$v].headers[] | keys[] as $k | "\($k), \(.[$k])"' | grep -v "decreasesSecurity\|increasesSecurity" >>"$outputFolder/aqua_out/parsedjson/$subdomain.headers"
     dirsearchfile=$(ls "$HOME/tools/dirsearch/reports/$subdomain/" | grep -v old)
 
-    touch "$outputFolder/reports/$subdomain.html"
     {
         echo '<html><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">'
@@ -452,17 +451,6 @@ main() {
     mkdir "$outputFolder/wayback-data/"
     mkdir "$outputFolder/screenshots/"
     mkdir "$outputFolder/nmap_results/"
-    touch "$outputFolder/crtsh.txt"
-    touch "$outputFolder/mass.txt"
-    touch "$outputFolder/cnames.txt"
-    touch "$outputFolder/pos.txt"
-    touch "$outputFolder/alldomains.txt"
-    touch "$outputFolder/temp.txt"
-    touch "$outputFolder/tmp.txt"
-    touch "$outputFolder/domaintemp.txt"
-    touch "$outputFolder/ipaddress.txt"
-    touch "$outputFolder/cleantemp.txt"
-    touch "$outputFolder/master_report.html"
 
     cleantemp
     recon "$domain"
