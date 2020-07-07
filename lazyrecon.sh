@@ -443,7 +443,7 @@ main() {
         mkdir "$outputDirectory/$domain"
     fi
 
-    outputFolder="$outputFolder"
+    outputFolder="$outputDirectory/$domain/$foldername"
 
     mkdir "$outputFolder"
     mkdir "$outputFolder/aqua_out/"
