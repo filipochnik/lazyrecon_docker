@@ -56,12 +56,6 @@ waybackrecon() {
     cat "$outputFolder/wayback-data/waybackurls.txt" | grep -P "\w+\.jsp(\?|$)" | sort -u >"$outputFolder/wayback-data/jspurls.txt"
 }
 
-cleanup() {
-    cd "$outputFolder/screenshots/" || exit
-    rename 's/_/-/g' -- *
-    cd "$path" || exit
-}
-
 hostalive() {
     echo "Probing for live hosts..."
     cat "$outputFolder/alldomains.txt" | sort -u | httprobe -c 50 -t 3000 >"$outputFolder/responsive.txt"
@@ -108,7 +102,6 @@ recon() {
     hostalive "$domain"
     cleandirsearch "$domain"
     aqua "$domain"
-    cleanup "$domain"
     waybackrecon "$domain"
     dirsearcher
 
@@ -123,6 +116,9 @@ dirsearcher() {
 aqua() {
     echo "Starting Aquatone scan..."
     cat "$outputFolder/urllist.txt" | aquatone -out "$outputFolder/aqua_out" -threads "$aquatoneThreads" -silent -scan-timeout 900 -ports "$aquatonePorts"
+    cd "$outputFolder/screenshots/" || exit
+    rename 's/_/-/g' -- *
+    cd "$path" || exit
 }
 
 nsrecords() {
