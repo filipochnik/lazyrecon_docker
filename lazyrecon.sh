@@ -82,10 +82,15 @@ recon() {
     amass enum -passive -nolocaldb -nf "$outputFolder/$domain.txt" -d "$domain" >"$outputFolder/amass.txt"
     cat "$outputFolder/"{"$domain.txt",amass.txt} | sort -u | grep "$domain" | sponge "$outputFolder/$domain.txt"
 
-    echo "Running DNSgen for new possible domain name combinations.."
+    echo "Running altdns"
     date
-    dnsgen "$outputFolder/$domain.txt" >"$outputFolder/dnsgen.txt"
-    cat "$outputFolder/"{"$domain.txt",dnsgen.txt} | sort -u | grep "$domain" | sponge "$outputFolder/$domain.txt"
+    altdns -i "$domain.txt" -o altdns.txt -w "$massdnsWordlist"
+    cat "$outputFolder/"{"$domain.txt",altdns.txt} | sort -u | grep "$domain" | sponge "$outputFolder/$domain.txt"
+
+    #echo "Running DNSgen for new possible domain name combinations.."
+    #date
+    #dnsgen "$outputFolder/$domain.txt" >"$outputFolder/dnsgen.txt"
+    #cat "$outputFolder/"{"$domain.txt",dnsgen.txt} | sort -u | grep "$domain" | sponge "$outputFolder/$domain.txt"
 
     nsrecords "$domain"
 
