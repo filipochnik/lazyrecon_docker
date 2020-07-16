@@ -58,23 +58,14 @@ RUN set -x \
     && adduser --uid 1000 --ingroup lazyrecon_user --home /home/lazyrecon_user --shell /bin/bash --disabled-password --gecos "" lazyrecon_user
 WORKDIR $TOOLS
 RUN set -x \
-    && git clone https://github.com/aboul3la/Sublist3r.git \
     && git clone https://github.com/maurosoria/dirsearch.git \
     && git clone https://github.com/blechschmidt/massdns.git \
-    && git clone https://github.com/gnebbia/pdlist \
     && pip3 install dnsgen
 WORKDIR $TOOLS/lazyrecon
 COPY lazyrecon.sh lazyrecon.sh
-WORKDIR $TOOLS/Sublist3r
-RUN set -x \
-    && pip install -r requirements.txt
 WORKDIR $TOOLS/massdns
 RUN set -x \
     && make
-WORKDIR $TOOLS/pdlist
-RUN set -x \
-    && pip3 install -r requirements.txt \
-    && python3 setup.py install
 WORKDIR $TOOLS/SecLists/Discovery/DNS/
 RUN set -x \
     && wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/dns-Jhaddix.txt \

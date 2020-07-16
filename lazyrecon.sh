@@ -72,31 +72,14 @@ hostalive() {
 recon() {
     echo "${green}Recon started on $domain ${reset}"
 
-    echo "Finding subdomains using Sublist3r..."
-    date
-    python "$HOME/tools/Sublist3r/sublist3r.py" -b -d "$domain" -t 10 -v -o "$outputFolder/sublist3r.txt" >/dev/null
-    cat "$outputFolder/sublist3r.txt" >>"$outputFolder/$domain.txt"
-
-    echo "Finding domains using Certspotter..."
-    date
-    curl -s "https://api.certspotter.com/v1/issuances?domain=$domain&include_subdomains=true&expand=dns_names" | jq '.[].dns_names[]' | sed 's/\"//g' | sed 's/\*\.//g' | sort -u | grep $domain >"$outputFolder/certspotter.txt"
-    cat "$outputFolder/certspotter.txt" >>"$outputFolder/$domain.txt"
-
     echo "Finding domains using (old) Project Sonar data script hosted by erbbysam.com (thx m8).."
     date
     curl -s "https://dns.bufferover.run/dns?q=$domain" 2>/dev/null | jq -r '.FDNS_A,.RDNS | .[]' | sed 's/\*\.//g' | cut -d ',' -f2 | grep -F ".$domain" | sort -u >>"$outputFolder/sonar.txt"
     cat "$outputFolder/sonar.txt" >>"$outputFolder/$domain.txt"
 
-    echo "Finding domains passively with pdlist.."
-    date
-    pdlist "$domain" --strict -o "$outputFolder/pdlist.txt"
-    cat "$outputFolder/pdlist.txt" >>"$outputFolder/$domain.txt"
-
-    cat "$outputFolder/$domain.txt" | sort -u | grep "$domain" | sponge "$outputFolder/$domain.txt"
-
     echo "Finding subdomains using Amass..."
     date
-    amass enum -active -brute -nf "$outputFolder/$domain.txt" -d "$domain" >"$outputFolder/amass.txt"
+    amass enum -active -brute -nolocaldb -nf "$outputFolder/$domain.txt" -d "$domain" >"$outputFolder/amass.txt"
     cat "$outputFolder/"{"$domain.txt",amass.txt} | sort -u | grep "$domain" | sponge "$outputFolder/$domain.txt"
 
     echo "Running DNSgen for new possible domain name combinations.."
@@ -133,24 +116,14 @@ aqua() {
 }
 
 nsrecords() {
-    echo "Checking http://crt.sh..."
-    date
-    $HOME/tools/massdns/scripts/ct.py "$domain" 2>/dev/null >"$outputFolder/tmp.txt"
-    [ -s "$outputFolder/tmp.txt" ] && cat "$outputFolder/tmp.txt" | $HOME/tools/massdns/bin/massdns -r "$HOME/tools/massdns/lists/resolvers.txt" -t A -q -o S -w "$outputFolder/crtsh.txt"
-    cat "$outputFolder/$domain.txt" | $HOME/tools/massdns/bin/massdns -r "$HOME/tools/massdns/lists/resolvers.txt" -t A -q -o S -w "$outputFolder/domaintemp.txt"
-
     echo "Starting MassDNS subdomain discovery, this may take a while..."
     date
-    $HOME/tools/massdns/scripts/subbrute.py "$massdnsWordlist" "$domain" | $HOME/tools/massdns/bin/massdns -r "$HOME/tools/massdns/lists/resolvers.txt" -t A -q -o S | grep -v 142.54.173.92 >"$outputFolder/mass.txt"
-
-    echo "${green}Started DNS records check...${reset}"
-
-    cat "$outputFolder/"{mass.txt,domaintemp.txt,crtsh.txt} >"$outputFolder/temp.txt"
+    $HOME/tools/massdns/scripts/subbrute.py "$massdnsWordlist" "$domain" | $HOME/tools/massdns/bin/massdns -r "$HOME/tools/massdns/lists/resolvers.txt" -t A -q -o S >"$outputFolder/mass.txt"
 
     echo "Checking for and removing wildcard DNS entry dupes..."
     date
-    cat "$outputFolder/temp.txt" | awk '{print $3}' | sort -u | while read -r line; do
-        wildcard=$(cat "$outputFolder/temp.txt" | grep -m 1 "$line")
+    cat "$outputFolder/mass.txt" | awk '{print $3}' | sort -u | while read -r line; do
+        wildcard=$(cat "$outputFolder/mass.txt" | grep -m 1 "$line")
         echo "$wildcard" >>"$outputFolder/cleantemp.txt"
     done
 
