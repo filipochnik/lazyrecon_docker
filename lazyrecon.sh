@@ -79,7 +79,7 @@ recon() {
 
     echo "Finding subdomains using Amass..."
     date
-    amass enum -active -brute -nolocaldb -nf "$outputFolder/$domain.txt" -d "$domain" >"$outputFolder/amass.txt"
+    amass enum -passive -nolocaldb -nf "$outputFolder/$domain.txt" -d "$domain" >"$outputFolder/amass.txt"
     cat "$outputFolder/"{"$domain.txt",amass.txt} | sort -u | grep "$domain" | sponge "$outputFolder/$domain.txt"
 
     echo "Running DNSgen for new possible domain name combinations.."
