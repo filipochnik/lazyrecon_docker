@@ -61,7 +61,7 @@ RUN set -x \
     && git clone https://github.com/maurosoria/dirsearch.git \
     && git clone https://github.com/blechschmidt/massdns.git \
     && pip3 install dnsgen \ 
-    && pip3 install py-altdns
+    && pip install py-altdns
 WORKDIR $TOOLS/lazyrecon
 COPY lazyrecon.sh lazyrecon.sh
 WORKDIR $TOOLS/massdns
