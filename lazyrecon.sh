@@ -386,13 +386,6 @@ cleandirsearch() {
     done
 }
 
-cleantemp() {
-    rm "$outputFolder/temp.txt"
-    rm "$outputFolder/tmp.txt"
-    rm "$outputFolder/domaintemp.txt"
-    rm "$outputFolder/cleantemp.txt"
-}
-
 main() {
     clear
     logo
@@ -412,13 +405,11 @@ main() {
     mkdir "$outputFolder/screenshots/"
     mkdir "$outputFolder/nmap_results/"
 
-    cleantemp
     recon "$domain"
     master_report "$domain"
     echo "${green}Scan for $domain finished successfully${reset}"
     duration=$SECONDS
     echo "Scan completed in : $(($duration / 60)) minutes and $(($duration % 60)) seconds."
-    cleantemp
     stty sane
     tput sgr0
 }
