@@ -99,12 +99,21 @@ recon() {
     dirsearcher
 
     cat "$outputFolder/$domain.txt" | sort -u | sponge "$outputFolder/$domain.txt"
+
+    subreports
+}
+
+subreports() {
+    cat "$outputFolder/urllist.txt" | while read -r line; do
+        subd=$line
+        report
+    done;
 }
 
 dirsearcher() {
     echo "Starting Dirsearch..."
     date
-    cat "$outputFolder/urllist.txt" | xargs -P$subdomainThreads -I % sh -c "python3 \"$HOME/tools/dirsearch/dirsearch.py\" -e \"$dirsearchExtensions\" -w \"$dirsearchWordlist\" -t \"$dirsearchThreads\" -u % | grep Target && tput sgr0 && bash ./lazyrecon.sh -r \"$outputDirectory\" -r \"$domain\" -r \"$foldername\" -r %"
+    cat "$outputFolder/urllist.txt" | xargs -P$subdomainThreads -I % sh -c "python3 \"$HOME/tools/dirsearch/dirsearch.py\" -e \"$dirsearchExtensions\" -w \"$dirsearchWordlist\" -t \"$dirsearchThreads\" -u %"
 }
 
 aqua() {
