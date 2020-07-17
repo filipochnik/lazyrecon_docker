@@ -71,6 +71,9 @@ WORKDIR $TOOLS/SecLists/Discovery/DNS/
 RUN set -x \
     && wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/dns-Jhaddix.txt \
     && cat dns-Jhaddix.txt | head -n -14 > clean-jhaddix-dns.txt
+WORKDIR $TOOLS
+RUN set -x \
+    && git clone https://github.com/assetnote/commonspeak2-wordlists
 COPY --from=build /go/bin/amass /bin/amass
 COPY --from=build /go/bin/aquatone /bin/aquatone
 COPY --from=build /go/bin/httprobe /bin/httprobe
