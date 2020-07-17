@@ -88,6 +88,11 @@ recon() {
     dnsgen "$outputFolder/$domain.txt" >"$outputFolder/dnsgen.txt"
     cat "$outputFolder/"{"$domain.txt",dnsgen.txt} | sort -u | grep "$domain" | sponge "$outputFolder/$domain.txt"
 
+    echo "Running subbrute..."
+    date
+    $HOME/tools/massdns/scripts/subbrute.py "$massdnsWordlist" "$domain" >"$outputFolder/subbrute.txt"
+    cat "$outputFolder/"{"$domain.txt",subbrute.txt} | sort -u | grep "$domain" | sponge "$outputFolder/$domain.txt"
+
     nsrecords "$domain"
 
     echo "Starting discovery of found subdomains..."
@@ -128,7 +133,7 @@ aqua() {
 nsrecords() {
     echo "Starting MassDNS subdomain discovery, this may take a while..."
     date
-    $HOME/tools/massdns/scripts/subbrute.py "$massdnsWordlist" "$domain" | $HOME/tools/massdns/bin/massdns -r "$HOME/tools/massdns/lists/resolvers.txt" -t A -q -o S >"$outputFolder/mass.txt"
+    cat "$outputFolder/$domain" | $HOME/tools/massdns/bin/massdns -r "$HOME/tools/massdns/lists/resolvers.txt" -t A -q -o S >"$outputFolder/mass.txt"
 
     echo "Checking for and removing wildcard DNS entry dupes..."
     date
