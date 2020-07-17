@@ -133,7 +133,7 @@ aqua() {
 nsrecords() {
     echo "Starting MassDNS subdomain discovery, this may take a while..."
     date
-    cat "$outputFolder/$domain" | $HOME/tools/massdns/bin/massdns -r "$HOME/tools/massdns/lists/resolvers.txt" -t A -q -o S >"$outputFolder/mass.txt"
+    cat "$outputFolder/$domain.txt" | $HOME/tools/massdns/bin/massdns -r "$HOME/tools/massdns/lists/resolvers.txt" -t A -q -o S >"$outputFolder/mass.txt"
 
     echo "Checking for and removing wildcard DNS entry dupes..."
     date
