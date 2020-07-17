@@ -45,9 +45,12 @@ if [ -z "${domain}" ]; then
     exit 1
 fi
 
+log() {
+    echo "${green}[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $1${reset}"
+}
+
 waybackrecon() {
-    echo "Scraping Wayback Machine for data..."
-    date
+    log "Scraping Wayback Machine for data..."
 
     cat "$outputFolder/urllist.txt" | waybackurls | sort -u > "$outputFolder/wayback-data/waybackurls.txt"
 
@@ -59,8 +62,7 @@ waybackrecon() {
 }
 
 hostalive() {
-    echo "Probing for live hosts..."
-    date
+    log "Probing for live hosts..."
     cat "$outputFolder/alldomains.txt" | sort -u | httprobe -c 50 -t 3000 >"$outputFolder/responsive.txt"
     cat "$outputFolder/responsive.txt" | sed 's/\http\:\/\///g' | sed 's/\https\:\/\///g' | sort -u | while read -r line; do
         probeurl=$(cat "$outputFolder/responsive.txt" | sort -u | grep -m 1 "$line")
@@ -73,30 +75,26 @@ hostalive() {
 recon() {
     echo "${green}Recon started on $domain ${reset}"
 
-    echo "Finding domains using (old) Project Sonar data script hosted by erbbysam.com (thx m8).."
-    date
+    log "Finding domains using (old) Project Sonar data script hosted by erbbysam.com (thx m8).."
     curl -s "https://dns.bufferover.run/dns?q=$domain" 2>/dev/null | jq -r '.FDNS_A,.RDNS | .[]' | sed 's/\*\.//g' | cut -d ',' -f2 | grep -F ".$domain" | sort -u >>"$outputFolder/sonar.txt"
     cat "$outputFolder/sonar.txt" >>"$outputFolder/$domain.txt"
 
-    echo "Finding subdomains using Amass..."
-    date
+    log "Finding subdomains using Amass..."
     amass enum -passive -nolocaldb -nf "$outputFolder/$domain.txt" -d "$domain" >"$outputFolder/amass.txt"
     cat "$outputFolder/"{"$domain.txt",amass.txt} | sort -u | grep "$domain" | sponge "$outputFolder/$domain.txt"
 
-    echo "Running DNSgen for new possible domain name combinations.."
-    date
+    log "Running DNSgen for new possible domain name combinations.."
     dnsgen "$outputFolder/$domain.txt" >"$outputFolder/dnsgen.txt"
     cat "$outputFolder/"{"$domain.txt",dnsgen.txt} | sort -u | grep "$domain" | sponge "$outputFolder/$domain.txt"
 
-    echo "Running subbrute..."
-    date
+    log "Running subbrute..."
     $HOME/tools/massdns/scripts/subbrute.py "$massdnsWordlist" "$domain" >"$outputFolder/subbrute.txt"
     cat "$outputFolder/"{"$domain.txt",subbrute.txt} | sort -u | grep "$domain" | sponge "$outputFolder/$domain.txt"
 
     nsrecords "$domain"
 
-    echo "Starting discovery of found subdomains..."
-    date
+    log "Starting discovery of found subdomains..."
+
     hostalive "$domain"
     cleandirsearch "$domain"
     aqua "$domain"
@@ -116,14 +114,12 @@ subreports() {
 }
 
 dirsearcher() {
-    echo "Starting Dirsearch..."
-    date
+    log "Starting Dirsearch..."
     cat "$outputFolder/urllist.txt" | xargs -P$subdomainThreads -I % sh -c "python3 \"$HOME/tools/dirsearch/dirsearch.py\" -e \"$dirsearchExtensions\" -w \"$dirsearchWordlist\" -t \"$dirsearchThreads\" -u %"
 }
 
 aqua() {
-    echo "Starting Aquatone scan..."
-    date
+    log "Starting Aquatone scan..."
     cat "$outputFolder/urllist.txt" | aquatone -out "$outputFolder/aqua_out" -threads "$aquatoneThreads" -silent -scan-timeout 900 -ports "$aquatonePorts"
     cd "$outputFolder/screenshots/" || exit
     rename 's/_/-/g' -- *
@@ -131,19 +127,16 @@ aqua() {
 }
 
 nsrecords() {
-    echo "Starting MassDNS subdomain discovery, this may take a while..."
-    date
+    log "Starting MassDNS subdomain discovery, this may take a while..."
     cat "$outputFolder/$domain.txt" | $HOME/tools/massdns/bin/massdns -r "$HOME/tools/massdns/lists/resolvers.txt" -t A -q -o S >"$outputFolder/mass.txt"
 
-    echo "Checking for and removing wildcard DNS entry dupes..."
-    date
+    log "Checking for and removing wildcard DNS entry dupes..."
     cat "$outputFolder/mass.txt" | awk '{print $3}' | sort -u | while read -r line; do
         wildcard=$(cat "$outputFolder/mass.txt" | grep -m 1 "$line")
         echo "$wildcard" >>"$outputFolder/cleantemp.txt"
     done
 
-    echo "Looking into CNAME records..."
-    date
+    log "Looking into CNAME records..."
     cat "$outputFolder/cleantemp.txt" | grep CNAME >>"$outputFolder/cnames.txt"
     cat "$outputFolder/cnames.txt" | sort -u | while read -r line; do
         hostrec=$(echo "$line" | awk '{print $1}')
@@ -416,9 +409,9 @@ main() {
 
     recon "$domain"
     master_report "$domain"
-    echo "${green}Scan for $domain finished successfully${reset}"
+    log "Scan for $domain finished successfully"
     duration=$SECONDS
-    echo "Scan completed in : $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+    log "Scan completed in : $(($duration / 60)) minutes and $(($duration % 60)) seconds."
     stty sane
     tput sgr0
 }
