@@ -84,7 +84,7 @@ recon() {
 
     echo "Running altdns"
     date
-    altdns -i "$domain.txt" -o altdns.txt -w "$massdnsWordlist"
+    altdns -i "$outputFolder/$domain.txt" -o altdns.txt -w "$massdnsWordlist"
     cat "$outputFolder/"{"$domain.txt",altdns.txt} | sort -u | grep "$domain" | sponge "$outputFolder/$domain.txt"
 
     #echo "Running DNSgen for new possible domain name combinations.."
