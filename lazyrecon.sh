@@ -73,7 +73,7 @@ hostalive() {
 }
 
 recon() {
-    echo "${green}Recon started on $domain ${reset}"
+    log "Recon started on $domain"
 
     log "Finding domains using (old) Project Sonar data script hosted by erbbysam.com (thx m8).."
     curl -s "https://dns.bufferover.run/dns?q=$domain" 2>/dev/null | jq -r '.FDNS_A,.RDNS | .[]' | sed 's/\*\.//g' | cut -d ',' -f2 | grep -F ".$domain" | sort -u >>"$outputFolder/sonar.txt"
