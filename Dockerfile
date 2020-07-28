@@ -1,9 +1,5 @@
 FROM golang:1.13.1-buster AS build
-RUN go get github.com/michenriksen/aquatone; exit 0
-RUN go get -u github.com/tomnomnom/httprobe; exit 0
-RUN go get github.com/tomnomnom/waybackurls; exit 0
 RUN go get github.com/OWASP/Amass; exit 0
-RUN go get -u github.com/tomnomnom/unfurl; exit 0
 ENV GO111MODULE on
 WORKDIR /go/src/github.com/OWASP/Amass
 RUN go install ./...
@@ -41,10 +37,8 @@ RUN set -x \
         python-dnspython \
         git \
         rename \
-        nmap \
         wget \
         curl \
-        chromium-browser \
         locales \
         dnsutils \
         moreutils \
@@ -58,7 +52,6 @@ RUN set -x \
     && adduser --uid 1000 --ingroup lazyrecon_user --home /home/lazyrecon_user --shell /bin/bash --disabled-password --gecos "" lazyrecon_user
 WORKDIR $TOOLS
 RUN set -x \
-    && git clone https://github.com/maurosoria/dirsearch.git \
     && git clone https://github.com/blechschmidt/massdns.git \
     && pip3 install dnsgen
 WORKDIR $TOOLS/lazyrecon
@@ -71,17 +64,7 @@ RUN set -x \
     && wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/dns-Jhaddix.txt \
     && cat dns-Jhaddix.txt | head -n -14 > clean-jhaddix-dns.txt
 WORKDIR $TOOLS
-RUN set -x \
-    && git clone https://github.com/assetnote/commonspeak2-wordlists
 COPY --from=build /go/bin/amass /bin/amass
-COPY --from=build /go/bin/aquatone /bin/aquatone
-COPY --from=build /go/bin/httprobe /bin/httprobe
-COPY --from=build /go/bin/waybackurls /bin/waybackurls
-COPY --from=build /go/bin/unfurl /bin/unfurl
-# Change home directory ownership and fix TLDextract caching permission error.
-RUN set -x \
-    && chown -R lazyrecon_user:lazyrecon_user $HOME \
-    && chown -R lazyrecon_user:lazyrecon_user /usr/local/lib/python3.6/dist-packages/tldextract/
 # Using fixuid to fix bind mount permission issues.
 RUN set -x \
     && USER=lazyrecon_user \
@@ -92,9 +75,5 @@ RUN set -x \
     && mkdir -p /etc/fixuid \
     && printf "user: $USER\ngroup: $GROUP\npaths: \n - /\n - $TOOLS/lazyrecon/lazyrecon_results\n" > /etc/fixuid/config.yml
 USER lazyrecon_user:lazyrecon_user
-# Fix Chromium working with Aquatone in Docker. Chromium now runs without a sandbox, but since we're in a container, it's an ok trade-off.
-RUN set -x \
-    && printf 'CHROMIUM_FLAGS="--no-sandbox --headless"\n' > $HOME/.chromium-browser.init
-#ENTRYPOINT ["fixuid", "/bin/bash"]
 WORKDIR $TOOLS/lazyrecon
 ENTRYPOINT ["fixuid", "bash", "./lazyrecon.sh"]
