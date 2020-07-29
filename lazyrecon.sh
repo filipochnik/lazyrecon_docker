@@ -1,6 +1,8 @@
 #!/bin/bash
 
 massdnsWordlist=$HOME/tools/SecLists/Discovery/DNS/clean-jhaddix-dns.txt
+massdnsResolvers1="$HOME/tools/massdns/lists/resolvers.txt"
+massdnsResolvers2="$HOME/tools/resolvers2.txt"
 outputDirectory="./lazyrecon_results"
 outputFolder=
 resultsFolder=
@@ -94,7 +96,8 @@ verify() {
     log "Starting verification"
 
     log "Starting MassDNS subdomain discovery"
-    cat "$outputFolder/candidates.txt" | $HOME/tools/massdns/bin/massdns -r "$HOME/tools/massdns/lists/resolvers.txt" -t A -q -o S >"$outputFolder/mass.txt"
+    cat "$outputFolder/candidates.txt" | $HOME/tools/massdns/bin/massdns -r "$HOME/tools/massdns/lists/resolvers.txt" -t A -q -o S >"$outputFolder/mass1.txt"
+    cat "$outputFolder/mass1.txt" | cut -d' ' -f1 | grep -v '*' | sed -e 's/\.$//' | $HOME/tools/massdns/bin/massdns -r "$HOME/tools/resolvers2.txt" -t A -q -o S >"$outputFolder/mass1.txt"
 
     log "Extracting CNAMEs"
     cat "$outputFolder/mass.txt" | grep CNAME >>"$outputFolder/cnames.txt"
