@@ -67,7 +67,7 @@ recon() {
 
     log "Scan for $domain finished successfully"
     duration=$SECONDS
-    log "Scan completed in: $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+    log "Scan completed in $(($duration / 60)) minutes and $(($duration % 60)) seconds."
 }
 
 generate_candidates() {
