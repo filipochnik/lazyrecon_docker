@@ -76,5 +76,5 @@ RUN set -x \
 USER lazyrecon_user:lazyrecon_user
 WORKDIR $TOOLS/lazyrecon
 COPY lazyrecon.sh lazyrecon.sh
-RUN echo "1.1.1.1\n8.8.8.8\n9.9.9.9\n" > resolvers2.txt
+RUN 'echo "1.1.1.1\n8.8.8.8\n9.9.9.9\n" > resolvers2.txt'
 ENTRYPOINT ["fixuid", "bash", "./lazyrecon.sh"]
