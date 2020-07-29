@@ -77,7 +77,7 @@ generate_candidates() {
     add_candidates "amass.txt"
 
     log "Running DNSgen for new possible domain name combinations"
-    dnsgen "$outputFolder/$domain.txt" >"$outputFolder/dnsgen.txt"
+    dnsgen "$outputFolder/candidates.txt" >"$outputFolder/dnsgen.txt"
     add_candidates "dnsgen.txt"
 
     log "Running subbrute"
