@@ -39,7 +39,7 @@ if [ -z "${domain}" ]; then
 fi
 
 log() {
-    echo "${green}[$(date -u +%Y-%m-%d %H:%M:%S)] $1${reset}"
+    echo "${green}[$(date -u '+%Y-%m-%d %H:%M:%S')] $1${reset}"
 }
 
 add_candidates() {
