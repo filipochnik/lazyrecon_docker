@@ -69,7 +69,7 @@ generate_candidates() {
     touch "$outputFolder/candidates.txt"
 
     log "Finding domains using Project Sonar data"
-    curl -s "https://dns.bufferover.run/dns?q=$domain" 2>/dev/null | jq -r '.FDNS_A,.RDNS | .[]' | sed 's/\*\.//g' | cut -d ',' -f2 | grep -F ".$domain" | sort -u >>"$outputFolder/sonar.txt"
+    curl -s "https://dns.bufferover.run/dns?q=$domain" 2>/dev/null | jq -r '.FDNS_A,.RDNS | .[]?' | sed 's/\*\.//g' | cut -d ',' -f2 | grep -F ".$domain" | sort -u >>"$outputFolder/sonar.txt"
     add_candidates "sonar.txt"
 
     log "Finding subdomains using Amass"
