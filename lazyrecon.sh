@@ -42,10 +42,15 @@ log() {
     echo "${green}[$(date -u '+%Y-%m-%d %H:%M:%S')] $1${reset}"
 }
 
+sort_unique() {
+    file=$1
+    cat "$file" | sort -u | sponge "$file"
+}
+
 add_candidates() {
     file=$1
     cat "$outputFolder/$file" >> "$outputFolder/candidates.txt"
-    cat "$outputFolder/candidates.txt" | sort -u | sponge "$outputFolder/candidates.txt"
+    sort_unique "$outputFolder/candidates.txt"
 }
 
 move_results() {
@@ -98,6 +103,7 @@ verify() {
         x="$line"
         echo "${x%?}" >>"$outputFolder/domains.txt"
     done
+    sort_unique "$outputFolder/domains.txt"
 }
 
 logo() {
