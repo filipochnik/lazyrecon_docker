@@ -55,7 +55,6 @@ RUN set -x \
     && git clone https://github.com/blechschmidt/massdns.git \
     && pip3 install dnsgen
 WORKDIR $TOOLS/lazyrecon
-COPY lazyrecon.sh lazyrecon.sh
 WORKDIR $TOOLS/massdns
 RUN set -x \
     && make
@@ -65,6 +64,7 @@ RUN set -x \
     && cat dns-Jhaddix.txt | head -n -14 > clean-jhaddix-dns.txt
 WORKDIR $TOOLS
 COPY --from=build /go/bin/amass /bin/amass
+COPY lazyrecon.sh lazyrecon.sh
 # Using fixuid to fix bind mount permission issues.
 RUN set -x \
     && USER=lazyrecon_user \
