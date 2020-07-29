@@ -64,7 +64,6 @@ RUN set -x \
     && cat dns-Jhaddix.txt | head -n -14 > clean-jhaddix-dns.txt
 WORKDIR $TOOLS
 COPY --from=build /go/bin/amass /bin/amass
-COPY lazyrecon.sh lazyrecon.sh
 # Using fixuid to fix bind mount permission issues.
 RUN set -x \
     && USER=lazyrecon_user \
@@ -76,4 +75,5 @@ RUN set -x \
     && printf "user: $USER\ngroup: $GROUP\npaths: \n - /\n - $TOOLS/lazyrecon/lazyrecon_results\n" > /etc/fixuid/config.yml
 USER lazyrecon_user:lazyrecon_user
 WORKDIR $TOOLS/lazyrecon
+COPY lazyrecon.sh lazyrecon.sh
 ENTRYPOINT ["fixuid", "bash", "./lazyrecon.sh"]
