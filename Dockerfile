@@ -1,9 +1,7 @@
 FROM golang:1.13.1-buster AS build
 ENV GO111MODULE on
-RUN go get -v github.com/projectdiscovery/subfinder/cmd/subfinder
-RUN go get github.com/OWASP/Amass; exit 0
-WORKDIR /go/src/github.com/OWASP/Amass
-RUN go install ./...
+RUN go get -v github.com/OWASP/Amass/v3/...
+RUN go get -v github.com/projectdiscovery/subfinder/...
 
 FROM ubuntu:18.04
 LABEL maintainer soaringswine
@@ -65,6 +63,7 @@ RUN set -x \
     && cat dns-Jhaddix.txt | head -n -14 > clean-jhaddix-dns.txt
 WORKDIR $TOOLS
 COPY --from=build /go/bin/amass /bin/amass
+COPY --from=build /go/bin/subfinder /bin/subfinder
 # Using fixuid to fix bind mount permission issues.
 RUN set -x \
     && USER=lazyrecon_user \
