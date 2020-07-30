@@ -78,6 +78,10 @@ generate_candidates() {
     curl -s "https://dns.bufferover.run/dns?q=$domain" 2>/dev/null | jq -r '.FDNS_A,.RDNS | .[]?' | sed 's/\*\.//g' | cut -d ',' -f2 | grep -F ".$domain" >"$outputFolder/sonar.txt"
     add_candidates "sonar.txt"
 
+    log "Finding subdomains using bufferoverrun API"
+    curl -s "http://tls.bufferover.run/dns?q=$domain" | jq -r '.Results | .[]?' | cut -d',' -f3 > "$outputFolder/bufferoverrun.txt"
+    add_candidates "bufferoverrun.txt"
+
     log "Finding subdomains using Amass"
     amass enum -passive -nolocaldb -d "$domain" >"$outputFolder/amass.txt"
     add_candidates "amass.txt"
