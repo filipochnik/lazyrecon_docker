@@ -82,6 +82,10 @@ generate_candidates() {
     curl -s "http://tls.bufferover.run/dns?q=$domain" | jq -r '.Results | .[]?' | cut -d',' -f3 > "$outputFolder/bufferoverrun.txt"
     add_candidates "bufferoverrun.txt"
 
+    log "Finding subdomains using subfinder"
+    subfinder -v -d "$domain" -o "$outputFolder/subfinder.txt"
+    add_candidates "subfinder.txt"
+
     log "Finding subdomains using Amass"
     amass enum -passive -nolocaldb -d "$domain" >"$outputFolder/amass.txt"
     add_candidates "amass.txt"

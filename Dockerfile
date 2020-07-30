@@ -1,6 +1,7 @@
 FROM golang:1.13.1-buster AS build
-RUN go get github.com/OWASP/Amass; exit 0
 ENV GO111MODULE on
+RUN go get -v github.com/projectdiscovery/subfinder/cmd/subfinder
+RUN go get github.com/OWASP/Amass; exit 0
 WORKDIR /go/src/github.com/OWASP/Amass
 RUN go install ./...
 
